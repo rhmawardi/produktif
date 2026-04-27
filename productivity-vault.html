@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>⚡ Productivity Vault</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    html,body{height:100%;background:#0d0d12;}
+    ::-webkit-scrollbar{width:4px;height:4px;}
+    ::-webkit-scrollbar-track{background:#13131a;}
+    ::-webkit-scrollbar-thumb{background:#2e2e42;border-radius:4px;}
+    .pvault{font-family:'DM Sans',sans-serif;color:#dde1f0;height:100vh;display:flex;overflow:hidden;}
+    .pvault h1,.pvault h2,.pvault h3,.pvault h4,.pvault h5,.pvault h6{font-family:'Syne',sans-serif;}
+    .sidebar{width:220px;min-width:220px;background:#0d0d12;border-right:1px solid #1e1e2e;overflow-y:auto;display:flex;flex-direction:column;padding:0 0 24px 0;transition:transform .3s ease;}
+    .sidebar-logo{padding:20px 18px 14px;border-bottom:1px solid #1e1e2e;}
+    .sidebar-logo h1{font-size:17px;font-weight:800;color:#fff;letter-spacing:-.3px;}
+    .sidebar-section{padding:16px 14px 8px;}
+    .sidebar-label{font-size:9px;font-weight:700;letter-spacing:2px;color:#4a4a68;text-transform:uppercase;margin-bottom:6px;padding:0 4px;}
+    .sidebar-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;cursor:pointer;font-size:13px;color:#8888aa;transition:all .15s;margin-bottom:2px;background:none;border:none;font-family:'DM Sans',sans-serif;width:100%;}
+    .sidebar-item:hover{background:#1a1a28;color:#dde1f0;}
+    .sidebar-item.active{background:#1e1e32;color:#fff;}
+    .sidebar-icon{font-size:14px;width:18px;text-align:center;}
+    .main{flex:1;overflow-y:auto;background:#0f0f17;}
+    .main-header{padding:18px 24px;border-bottom:1px solid #1a1a28;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#0f0f17;z-index:10;}
+    .main-header h2{font-size:18px;font-weight:700;color:#fff;}
+    .content{padding:20px 24px 80px;}
+    .section{margin-bottom:28px;}
+    .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+    .section-title{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#4a4a68;display:flex;align-items:center;gap:8px;}
+    .section-title span{font-size:15px;}
+    .card{background:#13131e;border:1px solid #1e1e2e;border-radius:12px;padding:14px;}
+    .card-grid{display:grid;gap:12px;}
+    .card-grid-2{grid-template-columns:repeat(2,1fr);}
+    .card-grid-4{grid-template-columns:repeat(4,1fr);}
+    .btn{border:none;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;padding:6px 12px;transition:all .15s;display:inline-flex;align-items:center;gap:5px;}
+    .btn-primary{background:#e8622a;color:#fff;}
+    .btn-primary:hover{background:#d4541f;transform:translateY(-1px);}
+    .btn-ghost{background:transparent;color:#6666aa;border:1px solid #2a2a3e;}
+    .btn-ghost:hover{background:#1a1a2e;color:#dde1f0;}
+    .btn-sm{padding:4px 10px;font-size:11px;border-radius:6px;}
+    .btn-icon{width:28px;height:28px;padding:0;border-radius:6px;justify-content:center;font-size:14px;}
+    .badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:100px;font-size:10px;font-weight:600;letter-spacing:.3px;}
+    .badge-red{background:rgba(239,68,68,.15);color:#f87171;}
+    .badge-yellow{background:rgba(251,191,36,.15);color:#fbbf24;}
+    .badge-green{background:rgba(74,222,128,.15);color:#4ade80;}
+    .badge-blue{background:rgba(77,148,255,.15);color:#4d94ff;}
+    .badge-orange{background:rgba(232,98,42,.15);color:#e8622a;}
+    .progress-bar{height:4px;border-radius:2px;background:#1e1e2e;overflow:hidden;margin:4px 0;}
+    .progress-fill{height:100%;border-radius:2px;transition:width .5s ease;}
+    .heat-cell{border-radius:2px;cursor:pointer;transition:all .15s;}
+    .heat-cell:hover{transform:scale(1.3);z-index:1;position:relative;}
+    .tag-week{background:rgba(232,98,42,.2);color:#e8622a;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:600;}
+    .tag-month{background:rgba(77,148,255,.2);color:#4d94ff;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:600;}
+    .tag-day{background:rgba(74,222,128,.2);color:#4ade80;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:600;}
+    .task-card{background:#13131e;border:1px solid #1e1e2e;border-radius:10px;padding:12px;transition:all .2s;}
+    .task-card:hover{border-color:#2a2a42;transform:translateY(-1px);}
+    .task-status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+    .proj-card{background:#13131e;border:1px solid #1e1e2e;border-radius:12px;padding:14px;transition:all .2s;}
+    .proj-card:hover{border-color:#2a2a42;}
+    .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+    .cal-day-header{font-size:10px;font-weight:600;color:#4a4a68;text-align:center;padding:4px;}
+    .cal-day{min-height:70px;background:#13131e;border:1px solid #1e1e2e;border-radius:8px;padding:6px;cursor:pointer;transition:all .15s;}
+    .cal-day:hover{border-color:#2a2a42;}
+    .cal-day.today{border-color:#e8622a;}
+    .cal-day-num{font-size:11px;font-weight:700;color:#6666aa;margin-bottom:4px;}
+    .cal-day.today .cal-day-num{color:#e8622a;}
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px;}
+    .modal{background:#15151f;border:1px solid #2a2a3e;border-radius:16px;padding:24px;width:100%;max-width:400px;max-height:90vh;overflow-y:auto;}
+    .modal-title{font-size:16px;font-weight:700;color:#fff;margin-bottom:16px;font-family:'Syne',sans-serif;}
+    .form-group{margin-bottom:14px;}
+    .form-label{font-size:11px;font-weight:600;color:#6666aa;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;display:block;}
+    .form-input{width:100%;background:#0f0f17;border:1px solid #2a2a3e;border-radius:8px;padding:8px 12px;color:#dde1f0;font-family:'DM Sans',sans-serif;font-size:13px;transition:border .15s;}
+    .form-input:focus{border-color:#e8622a;outline:none;}
+    select.form-input option{background:#15151f;}
+    textarea.form-input{resize:vertical;min-height:80px;}
+    .mobile-header{display:none;padding:14px 16px;border-bottom:1px solid #1e1e2e;background:#0d0d12;position:sticky;top:0;z-index:10;align-items:center;justify-content:space-between;}
+    .mobile-header h1{font-size:16px;font-weight:800;color:#fff;}
+    .mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:#0d0d12;border-top:1px solid #1e1e2e;padding:8px 0 8px;z-index:100;}
+    .mobile-nav-inner{display:flex;justify-content:space-around;}
+    .mobile-nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 12px;cursor:pointer;border-radius:8px;transition:all .15s;}
+    .mobile-nav-item span:first-child{font-size:18px;}
+    .mobile-nav-item span:last-child{font-size:9px;font-weight:600;color:#4a4a68;letter-spacing:.5px;text-transform:uppercase;}
+    .mobile-nav-item.active span:last-child{color:#e8622a;}
+    .perf-note{background:#13131e;border:1px solid #1e1e2e;border-radius:10px;padding:12px;font-size:12px;color:#8888aa;line-height:1.6;}
+    .streak-num{font-family:'DM Mono',monospace;font-size:22px;font-weight:500;color:#fff;}
+    .stat-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #1a1a28;font-size:12px;}
+    .stat-row:last-child{border:none;}
+    .add-btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border:1px dashed #2a2a3e;border-radius:10px;cursor:pointer;color:#4a4a68;font-size:12px;font-weight:500;transition:all .15s;background:transparent;width:100%;font-family:'DM Sans',sans-serif;}
+    .add-btn:hover{border-color:#4a4a68;color:#8888aa;}
+    .drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;}
+    .drawer{position:fixed;left:0;top:0;bottom:0;width:240px;background:#0d0d12;border-right:1px solid #1e1e2e;z-index:201;transform:translateX(-100%);transition:transform .3s ease;overflow-y:auto;}
+    .drawer.open{transform:translateX(0);}
+    .inline-edit{background:transparent;border:none;color:inherit;font-family:inherit;font-size:inherit;font-weight:inherit;cursor:text;width:100%;}
+    .inline-edit:focus{outline:1px solid #e8622a;border-radius:4px;background:#1a1a28;}
+    @media(max-width:768px){
+      .sidebar{display:none;}
+      .mobile-header{display:flex;}
+      .mobile-nav{display:block;}
+      .content{padding:14px 12px 90px;}
+      .card-grid-4{grid-template-columns:repeat(2,1fr);}
+      .drawer-overlay.open{display:block;}
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useCallback } = React;
+
+    const fmt = (d) => d.toISOString().split("T")[0];
+    const TODAY = fmt(new Date());
+
+    function getWeekDates(offsetWeeks = 0) {
+      const base = new Date();
+      base.setDate(base.getDate() + offsetWeeks * 7);
+      const dow = base.getDay();
+      const mon = new Date(base);
+      mon.setDate(base.getDate() - (dow === 0 ? 6 : dow - 1));
+      return Array.from({ length: 7 }, (_, i) => {
+        const d = new Date(mon);
+        d.setDate(mon.getDate() + i);
+        return fmt(d);
+      });
+    }
+
+    function getLast35Days() {
+      return Array.from({ length: 35 }, (_, i) => {
+        const d = new Date();
+        d.setDate(d.getDate() - (34 - i));
+        return fmt(d);
+      });
+    }
+
+    function calcStreak(datesArr) {
+      if (!datesArr || !datesArr.length) return 0;
+      const s = new Set(datesArr);
+      let streak = 0;
+      const cur = new Date();
+      cur.setHours(0, 0, 0, 0);
+      if (!s.has(fmt(cur))) {
+        cur.setDate(cur.getDate() - 1);
+        if (!s.has(fmt(cur))) return 0;
+      }
+      while (s.has(fmt(cur))) {
+        streak++;
+        cur.setDate(cur.getDate() - 1);
+      }
+      return streak;
+    }
+
+    function getDayName(dateStr, short = true) {
+      const d = new Date(dateStr + "T12:00:00");
+      return d.toLocaleDateString("id-ID", { weekday: short ? "short" : "long" });
+    }
+
+    function getMonthName(dateStr) {
+      const d = new Date(dateStr + "T12:00:00");
+      return d.toLocaleDateString("id-ID", { month: "long", year: "numeric" });
+    }
+
+    function getDayNum(dateStr) {
+      return new Date(dateStr + "T12:00:00").getDate();
+    }
+
+    function genId() {
+      return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    }
+
+    const WEEK_LABELS = ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"];
+
+    const DEFAULT = {
+      habits: [
+        { id: "h1", name: "6 Jam Deep Work", icon: "💻", target: 7, completedDates: [] },
+        { id: "h2", name: "Makan Sehat", icon: "🥗", target: 7, completedDates: [] },
+        { id: "h3", name: "Membaca", icon: "📚", target: 4, completedDates: [] },
+        { id: "h4", name: "Olahraga", icon: "🏋️", target: 6, completedDates: [] },
+      ],
+      tasks: [
+        { id: "t1", title: "Productivity Vault", project: "Notion Template", status: "not-started", dueDate: TODAY },
+        { id: "t2", title: "Email", project: "Content Creation", status: "not-started", dueDate: TODAY },
+        { id: "t3", title: "Framer 2nd Video", project: "Learn Framer", status: "not-started", dueDate: TODAY },
+      ],
+      projects: [
+        { id: "p1", name: "Notion Template", category: "Notion Template", totalTasks: 4, completedTasks: 0, daysToGo: 7 },
+        { id: "p2", name: "Content Creation", category: "Content Creation", totalTasks: 4, completedTasks: 0, daysToGo: 7 },
+        { id: "p3", name: "CapCut + Notion", category: "Learning", totalTasks: 0, completedTasks: 0, daysToGo: 7 },
+        { id: "p4", name: "Learn Framer", category: "Learning", totalTasks: 3, completedTasks: 0, daysToGo: 68 },
+      ],
+      performanceNote:
+        "Good Day! Selamat datang di Productivity Vault. Tetap fokus dan terus membangun momentum setiap harinya!",
+      userName: "Productivity Vault",
+    };
+
+    // localStorage-based storage (replaces window.storage)
+    const storage = {
+      get: (key) => {
+        try {
+          const v = localStorage.getItem(key);
+          return v ? { value: v } : null;
+        } catch(e) { return null; }
+      },
+      set: (key, value) => {
+        try { localStorage.setItem(key, value); return true; } catch(e) { return null; }
+      }
+    };
+
+    function HeatMap({ habit, onToggle }) {
+      const days35 = getLast35Days();
+      const set = new Set(habit.completedDates);
+      const rows = [];
+      for (let row = 0; row < 5; row++) {
+        rows.push(
+          <div key={row} style={{ display: "flex", gap: 3 }}>
+            {days35.slice(row * 7, row * 7 + 7).map((d) => {
+              const done = set.has(d);
+              const isToday = d === TODAY;
+              return (
+                <div
+                  key={d}
+                  className="heat-cell"
+                  onClick={() => onToggle(habit.id, d)}
+                  title={d}
+                  style={{
+                    width: 11,
+                    height: 11,
+                    background: done ? "#e8622a" : "#1e1e2e",
+                    border: isToday ? "1.5px solid #e8622a" : "none",
+                    opacity: done ? 1 : 0.6,
+                  }}
+                />
+              );
+            })}
+          </div>
+        );
+      }
+      return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+          {rows}
+        </div>
+      );
+    }
+
+    function WeekMiniCal({ habit, weekDates }) {
+      const set = new Set(habit.completedDates);
+      return (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 3, margin: "8px 0" }}>
+          {WEEK_LABELS.map((label, i) => (
+            <div key={label} style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 8, color: "#4a4a68", marginBottom: 3 }}>{label}</div>
+              <div
+                style={{
+                  height: 14,
+                  borderRadius: 3,
+                  background: set.has(weekDates[i]) ? "#e8622a" : "#1e1e2e",
+                  border: weekDates[i] === TODAY ? "1.5px solid #e8622a" : "none",
+                }}
+              />
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    function HabitStreakCard({ habit, onToggle, onEdit, onDelete }) {
+      const weekDates = getWeekDates();
+      const streak = calcStreak(habit.completedDates);
+      const weekDone = habit.completedDates.filter((d) => weekDates.includes(d)).length;
+      const pct = Math.round((weekDone / (habit.target || 7)) * 100);
+      const completedToday = habit.completedDates.includes(TODAY);
+      const [editing, setEditing] = useState(false);
+      const [name, setName] = useState(habit.name);
+
+      const saveEdit = () => { onEdit(habit.id, { name }); setEditing(false); };
+
+      return (
+        <div className="card" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ fontSize: 16 }}>{habit.icon}</span>
+              {editing ? (
+                <input
+                  className="form-input"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  onBlur={saveEdit}
+                  onKeyDown={(e) => e.key === "Enter" && saveEdit()}
+                  autoFocus
+                  style={{ padding: "2px 6px", fontSize: 12, width: 120 }}
+                />
+              ) : (
+                <span
+                  style={{ fontSize: 13, fontWeight: 600, color: "#dde1f0", cursor: "pointer" }}
+                  onDoubleClick={() => setEditing(true)}
+                  title="Klik dua kali untuk edit"
+                >
+                  {habit.name}
+                </span>
+              )}
+            </div>
+            <div style={{ display: "flex", gap: 4 }}>
+              <button className="btn btn-icon btn-ghost" style={{ fontSize: 11 }} onClick={() => setEditing(true)}>✏️</button>
+              <button className="btn btn-icon btn-ghost" style={{ fontSize: 11 }} onClick={() => onDelete(habit.id)}>🗑️</button>
+            </div>
+          </div>
+          <span className="tag-week">Weekly: {habit.target}x</span>
+          <WeekMiniCal habit={habit} weekDates={weekDates} />
+          {completedToday && (
+            <div style={{ fontSize: 11, color: "#4ade80", display: "flex", alignItems: "center", gap: 4 }}>
+              ✅ Completed Today
+            </div>
+          )}
+          <div className="progress-bar">
+            <div className="progress-fill" style={{ width: `${Math.min(pct, 100)}%`, background: "#e8622a" }} />
+          </div>
+          <div style={{ fontSize: 11, color: "#6666aa" }}>
+            Progress {pct}% ({weekDone}/{habit.target})
+          </div>
+          <div style={{ fontSize: 11, color: "#fbbf24" }}>
+            🔥 {streak} day{streak !== 1 ? "s" : ""} streak{streak > 0 ? " (New record!)" : ""}
+          </div>
+          <button
+            className="btn btn-primary btn-sm"
+            onClick={() => onToggle(habit.id)}
+            style={{ alignSelf: "flex-start", marginTop: 2 }}
+          >
+            {completedToday ? "✓ Done" : "Mark as complete"}
+          </button>
+        </div>
+      );
+    }
+
+    function DailyHabitCard({ habit, onToggle, onEdit }) {
+      const completedToday = habit.completedDates.includes(TODAY);
+      const streak = calcStreak(habit.completedDates);
+      const weekDates = getWeekDates();
+      const weekDone = habit.completedDates.filter((d) => weekDates.includes(d)).length;
+
+      return (
+        <div className="card" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{ fontSize: 16 }}>{habit.icon}</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: "#dde1f0" }}>{habit.name}</span>
+          </div>
+          <span className="tag-week" style={{ alignSelf: "flex-start" }}>Weekly: {habit.target}x</span>
+          <div style={{ fontSize: 10, color: "#4a4a68" }}>
+            Today is › {new Date().toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" })}
+          </div>
+          <HeatMap habit={habit} onToggle={onToggle} />
+          <div style={{ fontSize: 11, color: "#fbbf24" }}>
+            🔥 {streak} day{streak !== 1 ? "s" : ""} streak{streak > 0 ? "!" : ""}
+          </div>
+          {completedToday && (
+            <div style={{ fontSize: 11, color: "#4ade80" }}>✅ Completed Today</div>
+          )}
+          <button
+            className="btn btn-primary btn-sm"
+            onClick={() => onToggle(habit.id)}
+            style={{ alignSelf: "flex-start" }}
+          >
+            {completedToday ? "✓ Selesai Hari Ini" : "Mark as complete"}
+          </button>
+        </div>
+      );
+    }
+
+    function TaskCard({ task, onEdit, onDelete, projects }) {
+      const statusColors = {
+        "not-started": "#ef4444",
+        "in-progress": "#fbbf24",
+        completed: "#4ade80",
+      };
+      const statusLabel = {
+        "not-started": "Not started",
+        "in-progress": "In progress",
+        completed: "Completed",
+      };
+
+      return (
+        <div className="task-card">
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ fontSize: 14 }}>📄</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: "#dde1f0" }}>{task.title}</span>
+            </div>
+            <div style={{ display: "flex", gap: 3 }}>
+              <button className="btn btn-icon btn-ghost" style={{ fontSize: 11 }} onClick={() => onEdit(task)}>✏️</button>
+              <button className="btn btn-icon btn-ghost" style={{ fontSize: 11, color: "#ef4444" }} onClick={() => onDelete(task.id)}>✕</button>
+            </div>
+          </div>
+          <div style={{ fontSize: 11, color: "#6666aa", marginBottom: 6 }}>
+            🔗 {task.project}
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+            <div className="task-status-dot" style={{ background: statusColors[task.status] }} />
+            <span className="badge" style={{ background: `${statusColors[task.status]}20`, color: statusColors[task.status] }}>
+              {statusLabel[task.status]}
+            </span>
+          </div>
+          <div style={{ fontSize: 10, color: "#4a4a68", marginBottom: 8 }}>
+            📅 {task.dueDate === TODAY ? "due today!" : task.dueDate}
+          </div>
+          <button
+            className="btn btn-primary btn-sm"
+            onClick={() => onEdit({ ...task, status: task.status === "completed" ? "not-started" : "completed" })}
+          >
+            {task.status === "completed" ? "↩ Batal" : "Mark as completed"}
+          </button>
+        </div>
+      );
+    }
+
+    function ProjectCard({ proj, onEdit, onDelete }) {
+      const pct = proj.totalTasks > 0 ? Math.round((proj.completedTasks / proj.totalTasks) * 100) : 0;
+      return (
+        <div className="proj-card">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                <span style={{ fontSize: 14 }}>🔗</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "#dde1f0" }}>{proj.name}</span>
+              </div>
+              <span style={{ fontSize: 11, color: "#6666aa" }}>{proj.category}</span>
+            </div>
+            <div style={{ display: "flex", gap: 3 }}>
+              <button className="btn btn-icon btn-ghost" style={{ fontSize: 11 }} onClick={() => onEdit(proj)}>✏️</button>
+              <button className="btn btn-icon btn-ghost" style={{ fontSize: 11, color: "#ef4444" }} onClick={() => onDelete(proj.id)}>✕</button>
+            </div>
+          </div>
+          <div style={{ fontSize: 11, color: "#6666aa", marginBottom: 4 }}>
+            📋 Total tasks: {proj.totalTasks}
+          </div>
+          <div style={{ fontSize: 11, color: "#6666aa", marginBottom: 4 }}>
+            ⏳ Incomplete: {proj.totalTasks - proj.completedTasks} | ✅ Complete: {proj.completedTasks}
+          </div>
+          <div className="progress-bar" style={{ margin: "8px 0" }}>
+            <div className="progress-fill" style={{ width: `${pct}%`, background: "#4ade80" }} />
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ fontSize: 10, color: "#4a4a68" }}>📅 {proj.daysToGo} hari lagi</span>
+            <span className="badge badge-green" style={{ fontSize: 10 }}>{pct}%</span>
+          </div>
+        </div>
+      );
+    }
+
+    function CalendarView({ tasks, weekOffset, setWeekOffset }) {
+      const weekDates = getWeekDates(weekOffset);
+      const tasksByDate = {};
+      tasks.forEach((t) => {
+        if (!tasksByDate[t.dueDate]) tasksByDate[t.dueDate] = [];
+        tasksByDate[t.dueDate].push(t);
+      });
+      const statusColors = { "not-started": "#ef4444", "in-progress": "#fbbf24", completed: "#4ade80" };
+
+      return (
+        <div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+            <span style={{ fontSize: 13, fontWeight: 600, color: "#dde1f0" }}>
+              {getMonthName(weekDates[0])}
+            </span>
+            <div style={{ display: "flex", gap: 6 }}>
+              <button className="btn btn-ghost btn-sm" onClick={() => setWeekOffset((w) => w - 1)}>‹</button>
+              <button className="btn btn-ghost btn-sm" onClick={() => setWeekOffset(0)}>Today</button>
+              <button className="btn btn-ghost btn-sm" onClick={() => setWeekOffset((w) => w + 1)}>›</button>
+            </div>
+          </div>
+          <div className="cal-grid">
+            {WEEK_LABELS.map((l) => (
+              <div key={l} className="cal-day-header">{l}</div>
+            ))}
+            {weekDates.map((date) => {
+              const dayTasks = tasksByDate[date] || [];
+              return (
+                <div key={date} className={`cal-day${date === TODAY ? " today" : ""}`}>
+                  <div className="cal-day-num">{getDayNum(date)}</div>
+                  {dayTasks.slice(0, 3).map((t) => (
+                    <div
+                      key={t.id}
+                      style={{
+                        fontSize: 10,
+                        color: "#ccc",
+                        background: `${statusColors[t.status]}18`,
+                        borderLeft: `2px solid ${statusColors[t.status]}`,
+                        borderRadius: 3,
+                        padding: "2px 4px",
+                        marginBottom: 2,
+                        overflow: "hidden",
+                        whiteSpace: "nowrap",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
+                      {t.title}
+                    </div>
+                  ))}
+                  {dayTasks.length > 3 && (
+                    <div style={{ fontSize: 9, color: "#4a4a68" }}>+{dayTasks.length - 3} more</div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    function PerformancePanel({ data, onEditNote }) {
+      const todayTasks = data.tasks.filter((t) => t.dueDate === TODAY);
+      const overdue = data.tasks.filter((t) => t.dueDate < TODAY && t.status !== "completed");
+      const totalStreak = data.habits.reduce((sum, h) => sum + calcStreak(h.completedDates), 0);
+      const [editingNote, setEditingNote] = useState(false);
+      const [note, setNote] = useState(data.performanceNote);
+
+      return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 0", borderBottom: "1px solid #1e1e2e" }}>
+            <span>📊</span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: "#dde1f0" }}>Report</span>
+          </div>
+          <div className="perf-note">
+            <div style={{ fontSize: 11, fontWeight: 600, color: "#e8622a", marginBottom: 4 }}>
+              🔥 Performance Overview
+            </div>
+            <div style={{ fontSize: 11, color: "#6666aa", marginBottom: 6 }}>
+              {new Date().toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+            </div>
+            {editingNote ? (
+              <>
+                <textarea
+                  className="form-input"
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  style={{ fontSize: 12, minHeight: 70, marginBottom: 6 }}
+                />
+                <div style={{ display: "flex", gap: 6 }}>
+                  <button className="btn btn-primary btn-sm" onClick={() => { onEditNote(note); setEditingNote(false); }}>Simpan</button>
+                  <button className="btn btn-ghost btn-sm" onClick={() => setEditingNote(false)}>Batal</button>
+                </div>
+              </>
+            ) : (
+              <div
+                style={{ fontSize: 12, color: "#8888aa", lineHeight: 1.6, cursor: "pointer" }}
+                onClick={() => setEditingNote(true)}
+                title="Klik untuk edit"
+              >
+                {data.performanceNote}
+              </div>
+            )}
+          </div>
+          <div className="card" style={{ padding: 10 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: "#4a4a68", marginBottom: 8 }}>Due & Upcoming</div>
+            <div className="stat-row"><span style={{ fontSize: 11 }}>📋 To-do</span><span className="badge badge-blue">{todayTasks.length}</span></div>
+            <div className="stat-row"><span style={{ fontSize: 11 }}>⚠️ Overdue</span><span className="badge badge-red">{overdue.length}</span></div>
+            <div className="stat-row"><span style={{ fontSize: 11 }}>🔥 Total Streak</span><span className="badge badge-orange">{totalStreak}</span></div>
+            <div className="stat-row"><span style={{ fontSize: 11 }}>✅ Habits</span><span className="badge badge-green">{data.habits.length}</span></div>
+          </div>
+        </div>
+      );
+    }
+
+    function HabitStatPanel({ habits, onToggle }) {
+      return (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {habits.map((h) => {
+            const streak = calcStreak(h.completedDates);
+            const weekDates = getWeekDates();
+            const weekDone = h.completedDates.filter((d) => weekDates.includes(d)).length;
+            const completedToday = h.completedDates.includes(TODAY);
+            return (
+              <div key={h.id} className="card" style={{ padding: 10 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ fontSize: 14 }}>⏱️</span>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: "#dde1f0" }}>{h.name}</span>
+                  </div>
+                </div>
+                <span className="tag-week" style={{ fontSize: 10 }}>week</span>
+                <div className="stat-row" style={{ marginTop: 6 }}>
+                  <span style={{ fontSize: 11, color: "#6666aa" }}>Records this week:</span>
+                  <span style={{ fontSize: 11, color: "#dde1f0" }}>{weekDone}</span>
+                </div>
+                <div className="stat-row">
+                  <span style={{ fontSize: 11, color: "#6666aa" }}>Days Missed:</span>
+                  <span style={{ fontSize: 11, color: "#dde1f0" }}>{Math.max(0, (h.target || 7) - weekDone)}</span>
+                </div>
+                <div style={{ fontSize: 11, color: "#fbbf24", marginTop: 4 }}>
+                  🔥 {streak} day{streak !== 1 ? "s" : ""}
+                  {completedToday && <span style={{ color: "#4ade80", marginLeft: 8 }}>✅ Completed Today</span>}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+
+    function Modal({ modal, onClose, onSubmit, projects }) {
+      const [form, setForm] = useState(modal.payload || {});
+      const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+      const handleSubmit = () => { onSubmit(form); onClose(); };
+      const ICONS = ["💻", "🥗", "📚", "🏋️", "🎯", "💪", "🧘", "🎨", "🎵", "📝", "💊", "🌙", "🚴", "🏊", "🧠"];
+
+      return (
+        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
+          <div className="modal">
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <div className="modal-title">{modal.title}</div>
+              <button className="btn btn-ghost btn-icon" onClick={onClose} style={{ fontSize: 18, color: "#6666aa" }}>✕</button>
+            </div>
+
+            {(modal.type === "addHabit" || modal.type === "editHabit") && (
+              <>
+                <div className="form-group">
+                  <label className="form-label">Nama Habit</label>
+                  <input className="form-input" value={form.name || ""} onChange={(e) => set("name", e.target.value)} placeholder="Contoh: Olahraga pagi" />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Icon</label>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 4 }}>
+                    {ICONS.map((ic) => (
+                      <button
+                        key={ic}
+                        className="btn btn-ghost btn-icon"
+                        style={{
+                          fontSize: 18,
+                          background: form.icon === ic ? "#e8622a30" : "transparent",
+                          border: form.icon === ic ? "1px solid #e8622a" : "1px solid #2a2a3e",
+                        }}
+                        onClick={() => set("icon", ic)}
+                      >{ic}</button>
+                    ))}
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Target per minggu</label>
+                  <input className="form-input" type="number" min={1} max={7} value={form.target || 7} onChange={(e) => set("target", +e.target.value)} />
+                </div>
+              </>
+            )}
+
+            {(modal.type === "addTask" || modal.type === "editTask") && (
+              <>
+                <div className="form-group">
+                  <label className="form-label">Judul Task</label>
+                  <input className="form-input" value={form.title || ""} onChange={(e) => set("title", e.target.value)} placeholder="Nama task..." />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Project</label>
+                  <input className="form-input" value={form.project || ""} onChange={(e) => set("project", e.target.value)} placeholder="Nama project..." list="project-list" />
+                  <datalist id="project-list">
+                    {projects.map((p) => <option key={p.id} value={p.name} />)}
+                  </datalist>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Status</label>
+                  <select className="form-input" value={form.status || "not-started"} onChange={(e) => set("status", e.target.value)}>
+                    <option value="not-started">Not started</option>
+                    <option value="in-progress">In progress</option>
+                    <option value="completed">Completed</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Due Date</label>
+                  <input className="form-input" type="date" value={form.dueDate || TODAY} onChange={(e) => set("dueDate", e.target.value)} />
+                </div>
+              </>
+            )}
+
+            {(modal.type === "addProject" || modal.type === "editProject") && (
+              <>
+                <div className="form-group">
+                  <label className="form-label">Nama Project</label>
+                  <input className="form-input" value={form.name || ""} onChange={(e) => set("name", e.target.value)} placeholder="Nama project..." />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Kategori</label>
+                  <input className="form-input" value={form.category || ""} onChange={(e) => set("category", e.target.value)} placeholder="Contoh: Learning, Content..." />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Total Tasks</label>
+                  <input className="form-input" type="number" min={0} value={form.totalTasks || 0} onChange={(e) => set("totalTasks", +e.target.value)} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Tasks Selesai</label>
+                  <input className="form-input" type="number" min={0} value={form.completedTasks || 0} onChange={(e) => set("completedTasks", +e.target.value)} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Hari tersisa</label>
+                  <input className="form-input" type="number" min={0} value={form.daysToGo || 7} onChange={(e) => set("daysToGo", +e.target.value)} />
+                </div>
+              </>
+            )}
+
+            <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+              <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleSubmit}>
+                {modal.type.startsWith("add") ? "Tambah" : "Simpan Perubahan"}
+              </button>
+              <button className="btn btn-ghost" onClick={onClose}>Batal</button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function SidebarContent({ data, activeTab, setActiveTab, onEditNote, onOpenModal }) {
+      const navItems = [
+        { id: "habits", icon: "📅", label: "Habit Report" },
+        { id: "daily", icon: "📋", label: "Daily Habits" },
+        { id: "tasks", icon: "☑️", label: "Tasks" },
+        { id: "projects", icon: "🗂️", label: "Projects" },
+        { id: "calendar", icon: "📆", label: "Kalender" },
+        { id: "stats", icon: "📊", label: "Habit Stats" },
+      ];
+
+      return (
+        <>
+          <div className="sidebar-logo">
+            <h1>⚡ Productivity Vault</h1>
+          </div>
+          <div className="sidebar-section">
+            <div className="sidebar-label">Performance</div>
+            <PerformancePanel data={data} onEditNote={onEditNote} />
+          </div>
+          <div className="sidebar-section">
+            <div className="sidebar-label">Quick Action</div>
+            {[
+              { label: "Add New Task", type: "addTask" },
+              { label: "Add New Project", type: "addProject" },
+              { label: "Add New Habit", type: "addHabit" },
+            ].map(({ label, type }) => (
+              <button
+                key={type}
+                className="sidebar-item"
+                style={{ justifyContent: "flex-start" }}
+                onClick={() => onOpenModal(type)}
+              >
+                <span className="sidebar-icon">+</span>
+                <span>{label}</span>
+              </button>
+            ))}
+          </div>
+          <div className="sidebar-section">
+            <div className="sidebar-label">Navigation</div>
+            {navItems.map(({ id, icon, label }) => (
+              <div
+                key={id}
+                className={`sidebar-item${activeTab === id ? " active" : ""}`}
+                onClick={() => setActiveTab(id)}
+              >
+                <span className="sidebar-icon">{icon}</span>
+                <span>{label}</span>
+              </div>
+            ))}
+          </div>
+          <div className="sidebar-section">
+            <div className="sidebar-label">Habit Statistic</div>
+            <HabitStatPanel habits={data.habits} />
+          </div>
+        </>
+      );
+    }
+
+    function ProductivityVault() {
+      const [data, setData] = useState(DEFAULT);
+      const [loaded, setLoaded] = useState(false);
+      const [activeTab, setActiveTab] = useState("habits");
+      const [modal, setModal] = useState(null);
+      const [drawerOpen, setDrawerOpen] = useState(false);
+      const [weekOffset, setWeekOffset] = useState(0);
+      const [taskFilter, setTaskFilter] = useState("today");
+      const saveTimer = useRef(null);
+
+      useEffect(() => {
+        try {
+          const r = storage.get("pvault-v2");
+          if (r && r.value) setData(JSON.parse(r.value));
+        } catch (e) {}
+        setLoaded(true);
+      }, []);
+
+      useEffect(() => {
+        if (!loaded) return;
+        if (saveTimer.current) clearTimeout(saveTimer.current);
+        saveTimer.current = setTimeout(() => {
+          try { storage.set("pvault-v2", JSON.stringify(data)); } catch (e) {}
+        }, 700);
+      }, [data, loaded]);
+
+      const toggleHabit = useCallback((id, date = TODAY) => {
+        setData((prev) => ({
+          ...prev,
+          habits: prev.habits.map((h) =>
+            h.id !== id
+              ? h
+              : {
+                  ...h,
+                  completedDates: h.completedDates.includes(date)
+                    ? h.completedDates.filter((d) => d !== date)
+                    : [...h.completedDates, date],
+                }
+          ),
+        }));
+      }, []);
+
+      const openModal = useCallback((type, payload = {}) => {
+        const titles = {
+          addHabit: "Tambah Habit Baru",
+          editHabit: "Edit Habit",
+          addTask: "Tambah Task Baru",
+          editTask: "Edit Task",
+          addProject: "Tambah Project Baru",
+          editProject: "Edit Project",
+        };
+        setModal({ type, title: titles[type], payload });
+      }, []);
+
+      const handleModalSubmit = useCallback(
+        (form) => {
+          if (!modal) return;
+          const { type } = modal;
+          if (type === "addHabit") {
+            setData((p) => ({
+              ...p,
+              habits: [...p.habits, { id: genId(), name: form.name || "Habit Baru", icon: form.icon || "⭐", target: form.target || 7, completedDates: [] }],
+            }));
+          } else if (type === "editHabit") {
+            setData((p) => ({ ...p, habits: p.habits.map((h) => (h.id === form.id ? { ...h, ...form } : h)) }));
+          } else if (type === "addTask") {
+            setData((p) => ({
+              ...p,
+              tasks: [...p.tasks, { id: genId(), title: form.title || "Task Baru", project: form.project || "", status: form.status || "not-started", dueDate: form.dueDate || TODAY }],
+            }));
+          } else if (type === "editTask") {
+            setData((p) => ({ ...p, tasks: p.tasks.map((t) => (t.id === form.id ? { ...t, ...form } : t)) }));
+          } else if (type === "addProject") {
+            setData((p) => ({
+              ...p,
+              projects: [...p.projects, { id: genId(), name: form.name || "Project Baru", category: form.category || "Umum", totalTasks: form.totalTasks || 0, completedTasks: form.completedTasks || 0, daysToGo: form.daysToGo || 7 }],
+            }));
+          } else if (type === "editProject") {
+            setData((p) => ({ ...p, projects: p.projects.map((pr) => (pr.id === form.id ? { ...pr, ...form } : pr)) }));
+          }
+        },
+        [modal]
+      );
+
+      const todayTasks = data.tasks.filter((t) => t.dueDate === TODAY);
+      const overdueTasks = data.tasks.filter((t) => t.dueDate < TODAY && t.status !== "completed");
+      const completedTasks = data.tasks.filter((t) => t.status === "completed");
+
+      let filteredTasks = data.tasks;
+      if (taskFilter === "today") filteredTasks = todayTasks;
+      else if (taskFilter === "overdue") filteredTasks = overdueTasks;
+      else if (taskFilter === "completed") filteredTasks = completedTasks;
+
+      const mobileNavItems = [
+        { id: "habits", icon: "📅", label: "Habits" },
+        { id: "tasks", icon: "☑️", label: "Tasks" },
+        { id: "projects", icon: "🗂️", label: "Projects" },
+        { id: "calendar", icon: "📆", label: "Kalender" },
+        { id: "stats", icon: "📊", label: "Stats" },
+      ];
+
+      const renderContent = () => {
+        if (activeTab === "habits") {
+          return (
+            <>
+              <div className="section">
+                <div className="section-header">
+                  <div className="section-title">
+                    <span>📅</span> Habit-Streak & Goal-Tracking
+                  </div>
+                  <button className="btn btn-primary btn-sm" onClick={() => openModal("addHabit")}>
+                    + Habit
+                  </button>
+                </div>
+                <div className="card-grid card-grid-4" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))" }}>
+                  {data.habits.map((h) => (
+                    <HabitStreakCard
+                      key={h.id}
+                      habit={h}
+                      onToggle={toggleHabit}
+                      onEdit={(id, updates) =>
+                        setData((p) => ({ ...p, habits: p.habits.map((x) => (x.id === id ? { ...x, ...updates } : x)) }))
+                      }
+                      onDelete={(id) => setData((p) => ({ ...p, habits: p.habits.filter((x) => x.id !== id) }))}
+                    />
+                  ))}
+                  <button className="add-btn" onClick={() => openModal("addHabit")}>
+                    <span>+</span> Add Habit
+                  </button>
+                </div>
+              </div>
+            </>
+          );
+        }
+
+        if (activeTab === "daily") {
+          return (
+            <div className="section">
+              <div className="section-header">
+                <div className="section-title">
+                  <span>📋</span> Daily Habit Tracking
+                </div>
+              </div>
+              <div className="card-grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))" }}>
+                {data.habits.map((h) => (
+                  <DailyHabitCard key={h.id} habit={h} onToggle={toggleHabit} onEdit={(id, u) =>
+                    setData((p) => ({ ...p, habits: p.habits.map((x) => (x.id === id ? { ...x, ...u } : x)) }))
+                  } />
+                ))}
+                <button className="add-btn" onClick={() => openModal("addHabit")}>
+                  <span>+</span> Add Habit
+                </button>
+              </div>
+            </div>
+          );
+        }
+
+        if (activeTab === "tasks") {
+          return (
+            <div className="section">
+              <div className="section-header">
+                <div className="section-title">
+                  <span>📋</span> Task's
+                </div>
+                <button className="btn btn-primary btn-sm" onClick={() => openModal("addTask")}>
+                  + Task
+                </button>
+              </div>
+              <div style={{ display: "flex", gap: 6, marginBottom: 14, flexWrap: "wrap" }}>
+                {[
+                  { key: "today", label: `📌 Today (${todayTasks.length})` },
+                  { key: "all", label: `📋 All (${data.tasks.length})` },
+                  { key: "overdue", label: `⚠️ Overdue (${overdueTasks.length})` },
+                  { key: "completed", label: `✅ Completed (${completedTasks.length})` },
+                ].map(({ key, label }) => (
+                  <button
+                    key={key}
+                    className={`btn btn-sm ${taskFilter === key ? "btn-primary" : "btn-ghost"}`}
+                    onClick={() => setTaskFilter(key)}
+                  >{label}</button>
+                ))}
+              </div>
+              <div className="card-grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))" }}>
+                {filteredTasks.length === 0 ? (
+                  <div className="card" style={{ gridColumn: "1/-1", textAlign: "center", color: "#4a4a68", padding: 24 }}>
+                    Tidak ada task di kategori ini
+                  </div>
+                ) : (
+                  filteredTasks.map((t) => (
+                    <TaskCard
+                      key={t.id}
+                      task={t}
+                      projects={data.projects}
+                      onEdit={(updatedTask) => {
+                        if (updatedTask.status) {
+                          setData((p) => ({ ...p, tasks: p.tasks.map((x) => (x.id === updatedTask.id ? updatedTask : x)) }));
+                        } else {
+                          openModal("editTask", updatedTask);
+                        }
+                      }}
+                      onDelete={(id) => setData((p) => ({ ...p, tasks: p.tasks.filter((x) => x.id !== id) }))}
+                    />
+                  ))
+                )}
+                <button className="add-btn" onClick={() => openModal("addTask")}>
+                  <span>+</span> New Task
+                </button>
+              </div>
+            </div>
+          );
+        }
+
+        if (activeTab === "projects") {
+          return (
+            <div className="section">
+              <div className="section-header">
+                <div className="section-title">
+                  <span>🗂️</span> Project Manager
+                </div>
+                <button className="btn btn-primary btn-sm" onClick={() => openModal("addProject")}>
+                  + Project
+                </button>
+              </div>
+              <div className="card-grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))" }}>
+                {data.projects.map((p) => (
+                  <ProjectCard
+                    key={p.id}
+                    proj={p}
+                    onEdit={(proj) => openModal("editProject", proj)}
+                    onDelete={(id) => setData((prev) => ({ ...prev, projects: prev.projects.filter((x) => x.id !== id) }))}
+                  />
+                ))}
+                <button className="add-btn" onClick={() => openModal("addProject")}>
+                  <span>+</span> New Project
+                </button>
+              </div>
+            </div>
+          );
+        }
+
+        if (activeTab === "calendar") {
+          return (
+            <div className="section">
+              <div className="section-header">
+                <div className="section-title">
+                  <span>📆</span> Weekly & Monthly Calendar
+                </div>
+              </div>
+              <div className="card">
+                <CalendarView tasks={data.tasks} weekOffset={weekOffset} setWeekOffset={setWeekOffset} />
+              </div>
+            </div>
+          );
+        }
+
+        if (activeTab === "stats") {
+          const weekDates = getWeekDates();
+          return (
+            <div className="section">
+              <div className="section-header">
+                <div className="section-title">
+                  <span>📊</span> Habit Statistics
+                </div>
+              </div>
+              <div style={{ display: "grid", gap: 14, gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))" }}>
+                {data.habits.map((h) => {
+                  const streak = calcStreak(h.completedDates);
+                  const weekDone = h.completedDates.filter((d) => weekDates.includes(d)).length;
+                  const last35 = getLast35Days();
+                  const monthDone = h.completedDates.filter((d) => last35.includes(d)).length;
+                  const completedToday = h.completedDates.includes(TODAY);
+                  return (
+                    <div key={h.id} className="card">
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                        <span style={{ fontSize: 18 }}>{h.icon}</span>
+                        <span style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>{h.name}</span>
+                      </div>
+                      <div style={{ marginBottom: 10 }}>
+                        <div style={{ fontSize: 10, color: "#4a4a68", marginBottom: 4 }}>Last 35 Days</div>
+                        <HeatMap habit={h} onToggle={toggleHabit} />
+                      </div>
+                      <div className="stat-row"><span style={{ fontSize: 11 }}>This week</span><span style={{ fontSize: 11, color: "#dde1f0" }}>{weekDone}/{h.target}</span></div>
+                      <div className="stat-row"><span style={{ fontSize: 11 }}>This month</span><span style={{ fontSize: 11, color: "#dde1f0" }}>{monthDone}</span></div>
+                      <div className="stat-row"><span style={{ fontSize: 11 }}>Streak</span><span style={{ fontSize: 13, fontWeight: 700, color: "#fbbf24" }}>🔥 {streak}</span></div>
+                      <div style={{ fontSize: 11, color: completedToday ? "#4ade80" : "#6666aa", marginTop: 6 }}>
+                        {completedToday ? "✅ Completed Today" : "⬜ Not done today"}
+                      </div>
+                      <button className="btn btn-primary btn-sm" style={{ marginTop: 8 }} onClick={() => toggleHabit(h.id)}>
+                        {completedToday ? "✓ Selesai" : "Mark today"}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        }
+
+        return null;
+      };
+
+      if (!loaded) {
+        return (
+          <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#0f0f17", color: "#6666aa", fontFamily: "DM Sans, sans-serif" }}>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 32, marginBottom: 12 }}>⚡</div>
+              <div>Memuat Productivity Vault...</div>
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <div className="pvault">
+          {/* Desktop Sidebar */}
+          <aside className="sidebar">
+            <SidebarContent
+              data={data}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              onEditNote={(note) => setData((p) => ({ ...p, performanceNote: note }))}
+              onOpenModal={openModal}
+            />
+          </aside>
+
+          {/* Mobile Drawer Overlay */}
+          <div
+            className={`drawer-overlay${drawerOpen ? " open" : ""}`}
+            onClick={() => setDrawerOpen(false)}
+          />
+          {/* Mobile Drawer */}
+          <div className={`drawer${drawerOpen ? " open" : ""}`}>
+            <SidebarContent
+              data={data}
+              activeTab={activeTab}
+              setActiveTab={(tab) => { setActiveTab(tab); setDrawerOpen(false); }}
+              onEditNote={(note) => setData((p) => ({ ...p, performanceNote: note }))}
+              onOpenModal={(type) => { openModal(type); setDrawerOpen(false); }}
+            />
+          </div>
+
+          {/* Main */}
+          <div className="main">
+            {/* Mobile Header */}
+            <header className="mobile-header">
+              <button
+                style={{ background: "none", border: "none", color: "#dde1f0", fontSize: 20, cursor: "pointer" }}
+                onClick={() => setDrawerOpen(true)}
+              >☰</button>
+              <h1>⚡ Productivity Vault</h1>
+              <button
+                className="btn btn-primary btn-sm"
+                onClick={() => {
+                  const typeMap = { habits: "addHabit", daily: "addHabit", tasks: "addTask", projects: "addProject" };
+                  openModal(typeMap[activeTab] || "addTask");
+                }}
+              >+</button>
+            </header>
+
+            {/* Content */}
+            <div className="content">
+              {renderContent()}
+            </div>
+          </div>
+
+          {/* Mobile Bottom Nav */}
+          <nav className="mobile-nav">
+            <div className="mobile-nav-inner">
+              {mobileNavItems.map(({ id, icon, label }) => (
+                <div
+                  key={id}
+                  className={`mobile-nav-item${activeTab === id ? " active" : ""}`}
+                  onClick={() => setActiveTab(id)}
+                >
+                  <span>{icon}</span>
+                  <span>{label}</span>
+                </div>
+              ))}
+            </div>
+          </nav>
+
+          {/* Modal */}
+          {modal && (
+            <Modal
+              modal={modal}
+              onClose={() => setModal(null)}
+              onSubmit={handleModalSubmit}
+              projects={data.projects}
+            />
+          )}
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<ProductivityVault />);
+  </script>
+</body>
+</html>
