@@ -402,145 +402,222 @@ function ProjectCard({ proj, onEdit, onDelete }) {
   const pct = proj.totalTasks > 0 ? Math.round(proj.completedTasks / proj.totalTasks * 100) : 0;
   return /* @__PURE__ */ React.createElement("div", { className: "proj-card" }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 6, marginBottom: 4 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 14 } }, "\u{1F517}"), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, fontWeight: 700, color: "#dde1f0" } }, proj.name)), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: "#6666aa" } }, proj.category)), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 3 } }, /* @__PURE__ */ React.createElement("button", { className: "btn btn-icon btn-ghost", style: { fontSize: 11 }, onClick: () => onEdit(proj) }, "\u270F\uFE0F"), /* @__PURE__ */ React.createElement("button", { className: "btn btn-icon btn-ghost", style: { fontSize: 11, color: "#ef4444" }, onClick: () => onDelete(proj.id) }, "\u2715"))), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#6666aa", marginBottom: 4 } }, "\u{1F4CB} Total tasks: ", proj.totalTasks), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#6666aa", marginBottom: 4 } }, "\u23F3 Incomplete: ", proj.totalTasks - proj.completedTasks, " | \u2705 Complete: ", proj.completedTasks), /* @__PURE__ */ React.createElement("div", { className: "progress-bar", style: { margin: "8px 0" } }, /* @__PURE__ */ React.createElement("div", { className: "progress-fill", style: { width: `${pct}%`, background: "#4ade80" } })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 10, color: "#4a4a68" } }, "\u{1F4C5} ", proj.daysToGo, " hari lagi"), /* @__PURE__ */ React.createElement("span", { className: "badge badge-green", style: { fontSize: 10 } }, pct, "%")));
 }
-function CalendarView({ tasks, weekOffset, setWeekOffset, onEditTask, onDeleteTask }) {
-  const weekDates = getWeekDates(weekOffset);
+function CalendarView({ tasks, monthOffset, setMonthOffset, onEditTask, onDeleteTask }) {
+  const [selectedDate, setSelectedDate] = React.useState(null);
+
+  // Build the month grid
+  const now = new Date();
+  now.setDate(1);
+  now.setMonth(now.getMonth() + monthOffset);
+  const year = now.getFullYear();
+  const month = now.getMonth();
+
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const totalDays = lastDay.getDate();
+
+  // Monday-based: 0=Mon … 6=Sun
+  let startDow = firstDay.getDay(); // 0=Sun
+  startDow = startDow === 0 ? 6 : startDow - 1;
+
+  // Build cells array: nulls for padding + date strings
+  const cells = [];
+  for (let i = 0; i < startDow; i++) cells.push(null);
+  for (let d = 1; d <= totalDays; d++) {
+    const dd = String(d).padStart(2, "0");
+    const mm = String(month + 1).padStart(2, "0");
+    cells.push(`${year}-${mm}-${dd}`);
+  }
+  // Pad end to complete last row
+  while (cells.length % 7 !== 0) cells.push(null);
+
   const tasksByDate = {};
   tasks.forEach((t) => {
     if (!tasksByDate[t.dueDate]) tasksByDate[t.dueDate] = [];
     tasksByDate[t.dueDate].push(t);
   });
+
   const statusColors = { "not-started": "#ef4444", "in-progress": "#fbbf24", completed: "#4ade80" };
-  const statusLabel = { "not-started": "Not started", "in-progress": "In progress", completed: "Completed" };
-  const isMobile = window.innerWidth <= 768;
+  const statusLabel = { "not-started": "Not Started", "in-progress": "In Progress", completed: "Completed" };
 
-  const header = /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 } },
-    /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, fontWeight: 600, color: "#dde1f0" } }, getMonthName(weekDates[0])),
-    /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } },
-      /* @__PURE__ */ React.createElement("button", { className: "btn btn-ghost btn-sm", onClick: () => setWeekOffset((w) => w - 1) }, "\u2039"),
-      /* @__PURE__ */ React.createElement("button", { className: "btn btn-ghost btn-sm", onClick: () => setWeekOffset(0) }, "Today"),
-      /* @__PURE__ */ React.createElement("button", { className: "btn btn-ghost btn-sm", onClick: () => setWeekOffset((w) => w + 1) }, "\u203A")
-    )
-  );
+  const monthName = firstDay.toLocaleDateString("id-ID", { month: "long", year: "numeric" });
+  const selectedTasks = selectedDate ? (tasksByDate[selectedDate] || []) : [];
 
-  if (isMobile) {
-    return /* @__PURE__ */ React.createElement("div", null,
-      header,
-      /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } },
-        weekDates.map((date) => {
-          const dayTasks = tasksByDate[date] || [];
-          const isToday = date === TODAY;
-          return /* @__PURE__ */ React.createElement("div", {
-            key: date,
-            style: {
-              background: "#13131e",
-              border: `1px solid ${isToday ? "#e8622a" : "#1e1e2e"}`,
-              borderRadius: 10,
-              overflow: "hidden"
-            }
-          },
-            /* @__PURE__ */ React.createElement("div", {
-              style: {
-                display: "flex", alignItems: "center", justifyContent: "space-between",
-                padding: "8px 12px",
-                background: isToday ? "rgba(232,98,42,.08)" : "transparent",
-                borderBottom: dayTasks.length > 0 ? "1px solid #1e1e2e" : "none"
-              }
-            },
-              /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8 } },
-                /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, fontWeight: 700, color: isToday ? "#e8622a" : "#8888aa" } }, getDayNum(date)),
-                /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, color: isToday ? "#e8622a" : "#4a4a68", fontWeight: 600 } }, getDayName(date, false)),
-                isToday && /* @__PURE__ */ React.createElement("span", { style: { fontSize: 9, fontWeight: 700, background: "#e8622a", color: "#fff", padding: "1px 6px", borderRadius: 100 } }, "TODAY")
-              ),
-              dayTasks.length > 0 && /* @__PURE__ */ React.createElement("span", { className: "cal-day-count" }, dayTasks.length, " task", dayTasks.length > 1 ? "s" : "")
-            ),
-            dayTasks.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { padding: "6px 8px", display: "flex", flexDirection: "column", gap: 4 } },
-              dayTasks.map((t) => /* @__PURE__ */ React.createElement("div", {
-                key: t.id,
-                style: {
-                  display: "flex", alignItems: "center", gap: 8,
-                  padding: "7px 10px",
-                  background: `${statusColors[t.status]}12`,
-                  borderLeft: `3px solid ${statusColors[t.status]}`,
-                  borderRadius: 6,
-                  transition: "all .15s"
-                }
-              },
-                /* @__PURE__ */ React.createElement("div", { style: { width: 7, height: 7, borderRadius: "50%", background: statusColors[t.status], flexShrink: 0 } }),
-                /* @__PURE__ */ React.createElement("div", {
-                  style: { flex: 1, minWidth: 0, cursor: "pointer" },
-                  onClick: () => onEditTask && onEditTask(t)
-                },
-                  /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, fontWeight: 600, color: "#dde1f0", wordBreak: "break-word" } }, t.title),
-                  t.project && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, color: "#6666aa", marginTop: 1 } }, "\uD83D\uDD17 ", t.project)
-                ),
-                /* @__PURE__ */ React.createElement("span", {
-                  style: {
-                    fontSize: 9, fontWeight: 600, flexShrink: 0,
-                    color: statusColors[t.status],
-                    background: `${statusColors[t.status]}20`,
-                    padding: "2px 6px", borderRadius: 100
-                  }
-                }, statusLabel[t.status]),
-                /* @__PURE__ */ React.createElement("button", {
-                  onClick: (e) => { e.stopPropagation(); onDeleteTask && onDeleteTask(t.id); },
-                  style: {
-                    background: "rgba(239,68,68,.15)", border: "none", borderRadius: 5,
-                    color: "#ef4444", fontSize: 13, width: 26, height: 26,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    cursor: "pointer", flexShrink: 0, transition: "all .15s"
-                  },
-                  title: "Hapus task",
-                  onMouseEnter: (e) => { e.currentTarget.style.background = "rgba(239,68,68,.35)"; },
-                  onMouseLeave: (e) => { e.currentTarget.style.background = "rgba(239,68,68,.15)"; }
-                }, "\u2715")
-              ))
-            )
-          );
-        })
+  return React.createElement("div", null,
+
+    // ── Header: month nav ──
+    React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 } },
+      React.createElement("span", { style: { fontSize: 15, fontWeight: 700, color: "#fff", fontFamily: "'Syne', sans-serif" } }, monthName),
+      React.createElement("div", { style: { display: "flex", gap: 6 } },
+        React.createElement("button", { className: "btn btn-ghost btn-sm", onClick: () => { setMonthOffset(m => m - 1); setSelectedDate(null); } }, "‹"),
+        React.createElement("button", { className: "btn btn-ghost btn-sm", onClick: () => { setMonthOffset(0); setSelectedDate(null); } }, "Hari Ini"),
+        React.createElement("button", { className: "btn btn-ghost btn-sm", onClick: () => { setMonthOffset(m => m + 1); setSelectedDate(null); } }, "›")
       )
-    );
-  }
+    ),
 
-  // Desktop: 7-column grid
-  return /* @__PURE__ */ React.createElement("div", null,
-    header,
-    /* @__PURE__ */ React.createElement("div", { className: "cal-grid" },
-      WEEK_LABELS.map((l) => /* @__PURE__ */ React.createElement("div", { key: l, className: "cal-day-header" }, l)),
-      weekDates.map((date) => {
+    // ── Day-of-week headers ──
+    React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 3, marginBottom: 3 } },
+      ["Sen","Sel","Rab","Kam","Jum","Sab","Min"].map(l =>
+        React.createElement("div", { key: l, style: { textAlign: "center", fontSize: 10, fontWeight: 700, color: "#4a4a68", padding: "4px 0", letterSpacing: 1 } }, l)
+      )
+    ),
+
+    // ── Calendar grid ──
+    React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 3 } },
+      cells.map((date, idx) => {
+        if (!date) return React.createElement("div", { key: `pad-${idx}`, style: { minHeight: 64, background: "transparent" } });
         const dayTasks = tasksByDate[date] || [];
-        return /* @__PURE__ */ React.createElement("div", { key: date, className: `cal-day${date === TODAY ? " today" : ""}` },
-          /* @__PURE__ */ React.createElement("div", { className: "cal-day-num" },
-            /* @__PURE__ */ React.createElement("span", null, getDayNum(date)),
-            dayTasks.length > 0 && /* @__PURE__ */ React.createElement("span", { className: "cal-day-count" }, dayTasks.length)
+        const isToday = date === TODAY;
+        const isSelected = date === selectedDate;
+        const hasTasks = dayTasks.length > 0;
+
+        return React.createElement("div", {
+          key: date,
+          onClick: () => setSelectedDate(isSelected ? null : date),
+          style: {
+            minHeight: 64,
+            background: isSelected ? "#1e1e38" : "#13131e",
+            border: `1px solid ${isSelected ? "#e8622a" : isToday ? "#e8622a88" : "#1e1e2e"}`,
+            borderRadius: 8,
+            padding: "5px 5px 4px",
+            cursor: "pointer",
+            transition: "all .15s",
+            position: "relative",
+            display: "flex",
+            flexDirection: "column",
+            gap: 2
+          }
+        },
+          // Day number
+          React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 2 } },
+            React.createElement("span", {
+              style: {
+                fontSize: 12, fontWeight: 700,
+                color: isToday ? "#fff" : "#8888aa",
+                background: isToday ? "#e8622a" : "transparent",
+                width: isToday ? 20 : "auto", height: isToday ? 20 : "auto",
+                borderRadius: isToday ? "50%" : 0,
+                display: "flex", alignItems: "center", justifyContent: "center"
+              }
+            }, new Date(date + "T12:00:00").getDate()),
+            hasTasks && React.createElement("span", {
+              style: {
+                fontSize: 8, fontWeight: 700, lineHeight: 1,
+                background: isSelected ? "#e8622a" : "rgba(232,98,42,.25)",
+                color: isSelected ? "#fff" : "#e8622a",
+                padding: "1px 4px", borderRadius: 100
+              }
+            }, dayTasks.length)
           ),
-          /* @__PURE__ */ React.createElement("div", { className: "cal-day-tasks" },
-            dayTasks.map((t) => /* @__PURE__ */ React.createElement("div", {
+
+          // Task chips — show up to 3, rest as dot indicator
+          dayTasks.slice(0, 3).map(t =>
+            React.createElement("div", {
               key: t.id,
               style: {
-                display: "flex", alignItems: "center", gap: 3,
-                fontSize: 10, color: "#ccc",
+                fontSize: 9, color: "#ccc", lineHeight: 1.3,
                 background: `${statusColors[t.status]}18`,
                 borderLeft: `2px solid ${statusColors[t.status]}`,
-                borderRadius: 3, padding: "2px 3px 2px 4px",
-                transition: "all .15s", flexShrink: 0
-              },
-              onMouseEnter: (e) => { e.currentTarget.style.background = `${statusColors[t.status]}35`; },
-              onMouseLeave: (e) => { e.currentTarget.style.background = `${statusColors[t.status]}18`; }
-            },
-              /* @__PURE__ */ React.createElement("span", {
-                style: { flex: 1, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis", cursor: "pointer" },
-                title: `✏️ Edit: ${t.title}`,
-                onClick: () => onEditTask && onEditTask(t)
-              }, t.title),
-              /* @__PURE__ */ React.createElement("span", {
-                onClick: (e) => { e.stopPropagation(); onDeleteTask && onDeleteTask(t.id); },
-                title: "Hapus",
-                style: { cursor: "pointer", color: "#ef4444", fontWeight: 700, fontSize: 10, lineHeight: 1, padding: "0 1px", flexShrink: 0 }
-              }, "\u00D7")
-            ))
-          )
+                borderRadius: 2, padding: "1px 3px",
+                overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis"
+              }
+            }, t.title)
+          ),
+          dayTasks.length > 3 && React.createElement("div", {
+            style: { fontSize: 8, color: "#6666aa", textAlign: "center", marginTop: 1 }
+          }, `+${dayTasks.length - 3} lainnya`)
         );
       })
+    ),
+
+    // ── Selected day detail panel ──
+    selectedDate && React.createElement("div", {
+      style: {
+        marginTop: 14,
+        background: "#1a1a2a",
+        border: "1px solid #2a2a3e",
+        borderRadius: 12,
+        overflow: "hidden"
+      }
+    },
+      // Panel header
+      React.createElement("div", {
+        style: {
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "10px 14px",
+          background: "rgba(232,98,42,.08)",
+          borderBottom: "1px solid #2a2a3e"
+        }
+      },
+        React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8 } },
+          React.createElement("span", { style: { fontSize: 15, fontWeight: 700, color: "#e8622a" } },
+            new Date(selectedDate + "T12:00:00").toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long" })
+          ),
+          selectedDate === TODAY && React.createElement("span", {
+            style: { fontSize: 9, fontWeight: 700, background: "#e8622a", color: "#fff", padding: "2px 7px", borderRadius: 100 }
+          }, "TODAY")
+        ),
+        React.createElement("button", {
+          onClick: () => setSelectedDate(null),
+          style: { background: "none", border: "none", color: "#6666aa", fontSize: 16, cursor: "pointer", lineHeight: 1 }
+        }, "✕")
+      ),
+
+      // Task list in panel
+      selectedTasks.length === 0
+        ? React.createElement("div", { style: { padding: "20px 14px", textAlign: "center", color: "#4a4a68", fontSize: 12 } }, "Tidak ada task di hari ini")
+        : React.createElement("div", { style: { padding: "8px 10px", display: "flex", flexDirection: "column", gap: 6 } },
+            selectedTasks.map(t =>
+              React.createElement("div", {
+                key: t.id,
+                style: {
+                  display: "flex", alignItems: "center", gap: 10,
+                  padding: "9px 12px",
+                  background: `${statusColors[t.status]}10`,
+                  borderLeft: `3px solid ${statusColors[t.status]}`,
+                  borderRadius: 8, transition: "all .15s"
+                }
+              },
+                React.createElement("div", { style: { width: 8, height: 8, borderRadius: "50%", background: statusColors[t.status], flexShrink: 0 } }),
+                React.createElement("div", { style: { flex: 1, minWidth: 0, cursor: "pointer" }, onClick: () => onEditTask && onEditTask(t) },
+                  React.createElement("div", { style: { fontSize: 13, fontWeight: 600, color: "#dde1f0" } }, t.title),
+                  React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, marginTop: 3 } },
+                    t.project && React.createElement("span", { style: { fontSize: 10, color: "#6666aa" } }, "🔗 " + t.project),
+                    React.createElement("span", {
+                      style: {
+                        fontSize: 9, fontWeight: 600,
+                        color: statusColors[t.status],
+                        background: `${statusColors[t.status]}20`,
+                        padding: "1px 6px", borderRadius: 100
+                      }
+                    }, statusLabel[t.status])
+                  )
+                ),
+                React.createElement("div", { style: { display: "flex", gap: 4, flexShrink: 0 } },
+                  React.createElement("button", {
+                    onClick: () => onEditTask && onEditTask(t),
+                    title: "Edit task",
+                    style: {
+                      background: "rgba(77,148,255,.15)", border: "none", borderRadius: 6,
+                      color: "#4d94ff", fontSize: 12, width: 28, height: 28,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      cursor: "pointer"
+                    }
+                  }, "✏️"),
+                  React.createElement("button", {
+                    onClick: () => { onDeleteTask && onDeleteTask(t.id); if (selectedTasks.length <= 1) setSelectedDate(null); },
+                    title: "Hapus task",
+                    style: {
+                      background: "rgba(239,68,68,.15)", border: "none", borderRadius: 6,
+                      color: "#ef4444", fontSize: 13, width: 28, height: 28,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      cursor: "pointer"
+                    }
+                  }, "✕")
+                )
+              )
+            )
+          )
     )
   );
 }
@@ -644,6 +721,7 @@ function ProductivityVault() {
   const [modal, setModal] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [weekOffset, setWeekOffset] = useState(0);
+  const [monthOffset, setMonthOffset] = useState(0);
   const [taskFilter, setTaskFilter] = useState("today");
   const saveTimer = useRef(null);
   useEffect(() => {
@@ -783,7 +861,7 @@ function ProductivityVault() {
       )), /* @__PURE__ */ React.createElement("button", { className: "add-btn", onClick: () => openModal("addProject") }, /* @__PURE__ */ React.createElement("span", null, "+"), " New Project")));
     }
     if (activeTab === "calendar") {
-      return /* @__PURE__ */ React.createElement("div", { className: "section" }, /* @__PURE__ */ React.createElement("div", { className: "section-header" }, /* @__PURE__ */ React.createElement("div", { className: "section-title" }, /* @__PURE__ */ React.createElement("span", null, "\u{1F4C6}"), " Weekly & Monthly Calendar")), /* @__PURE__ */ React.createElement("div", { className: "card" }, /* @__PURE__ */ React.createElement(CalendarView, { tasks: data.tasks, weekOffset, setWeekOffset, onEditTask: (task) => openModal("editTask", task), onDeleteTask: (id) => setData((p) => __spreadProps(__spreadValues({}, p), { tasks: p.tasks.filter((x) => x.id !== id) })) })));
+      return /* @__PURE__ */ React.createElement("div", { className: "section" }, /* @__PURE__ */ React.createElement("div", { className: "section-header" }, /* @__PURE__ */ React.createElement("div", { className: "section-title" }, /* @__PURE__ */ React.createElement("span", null, "\u{1F4C6}"), " Weekly & Monthly Calendar")), /* @__PURE__ */ React.createElement("div", { className: "card", style: { padding: 12 } }, /* @__PURE__ */ React.createElement(CalendarView, { tasks: data.tasks, monthOffset, setMonthOffset, onEditTask: (task) => openModal("editTask", task), onDeleteTask: (id) => setData((p) => __spreadProps(__spreadValues({}, p), { tasks: p.tasks.filter((x) => x.id !== id) })) })));
     }
     if (activeTab === "stats") {
       const weekDates = getWeekDates();
