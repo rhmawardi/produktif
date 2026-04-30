@@ -12,9 +12,6 @@
   <title>⚡ Productivity Vault</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
@@ -281,23 +278,6 @@ const storage = {
     }
   }
 };
-const FIREBASE_CONFIG = {
-  apiKey: "ISI_API_KEY_KAMU",
-  authDomain: "ISI_AUTH_DOMAIN_KAMU",
-  projectId: "ISI_PROJECT_ID_KAMU",
-  storageBucket: "ISI_STORAGE_BUCKET_KAMU",
-  messagingSenderId: "ISI_MESSAGING_SENDER_ID_KAMU",
-  appId: "ISI_APP_ID_KAMU"
-};
-let firebaseReady = false;
-let auth = null;
-let db = null;
-if (typeof firebase !== "undefined" && FIREBASE_CONFIG.projectId !== "ISI_PROJECT_ID_KAMU") {
-  firebase.initializeApp(FIREBASE_CONFIG);
-  auth = firebase.auth();
-  db = firebase.firestore();
-  firebaseReady = true;
-}
 function HeatMap({ habit, onToggle }) {
   const days35 = getLast35Days();
   const set = new Set(habit.completedDates);
@@ -737,8 +717,6 @@ function SidebarContent({ data, activeTab, setActiveTab, onEditNote, onOpenModal
 function ProductivityVault() {
   const [data, setData] = useState(DEFAULT);
   const [loaded, setLoaded] = useState(false);
-  const [user, setUser] = useState(null);
-  const [syncStatus, setSyncStatus] = useState("local");
   const [activeTab, setActiveTab] = useState("habits");
   const [modal, setModal] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -747,60 +725,23 @@ function ProductivityVault() {
   const [taskFilter, setTaskFilter] = useState("today");
   const saveTimer = useRef(null);
   useEffect(() => {
-    if (!firebaseReady) {
+    try {
       const r = storage.get("pvault-v2");
       if (r && r.value) setData(JSON.parse(r.value));
-      setLoaded(true);
-      return;
-    }
-    const unsub = auth.onAuthStateChanged(async (u) => {
-      setUser(u || null);
-      if (!u) {
-        setSyncStatus("local");
-        const r = storage.get("pvault-v2");
-        if (r && r.value) setData(JSON.parse(r.value));
-        setLoaded(true);
-        return;
-      }
-      setSyncStatus("syncing");
-      try {
-        const snap = await db.collection("vaults").doc(u.uid).get();
-        if (snap.exists && snap.data() && snap.data().data) {
-          setData(snap.data().data);
-        } else {
-          await db.collection("vaults").doc(u.uid).set({ data: DEFAULT, updatedAt: Date.now(), email: u.email || "" });
-          setData(DEFAULT);
-        }
-        setSyncStatus("online");
-      } catch (e) {
-        setSyncStatus("error");
-      }
-      setLoaded(true);
-    });
-    return () => unsub();
-  }, []);
-  useEffect(() => {
-    try {
-      storage.set("pvault-v2", JSON.stringify(data));
     } catch (e) {
     }
-  }, [data]);
+    setLoaded(true);
+  }, []);
   useEffect(() => {
     if (!loaded) return;
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
       try {
-        if (firebaseReady && user) {
-          db.collection("vaults").doc(user.uid).set({ data, updatedAt: Date.now(), email: user.email || "" });
-          setSyncStatus("online");
-        } else {
-          storage.set("pvault-v2", JSON.stringify(data));
-        }
+        storage.set("pvault-v2", JSON.stringify(data));
       } catch (e) {
-        setSyncStatus("error");
       }
     }, 700);
-  }, [data, loaded, user]);
+  }, [data, loaded]);
   const toggleHabit = useCallback((id, date = TODAY) => {
     setData((prev) => __spreadProps(__spreadValues({}, prev), {
       habits: prev.habits.map(
@@ -947,10 +888,7 @@ function ProductivityVault() {
       onEditNote: (note) => setData((p) => __spreadProps(__spreadValues({}, p), { performanceNote: note })),
       onOpenModal: openModal
     }
-  )), /* @__PURE__ */ React.createElement("div", { style: { padding: "12px 14px", borderTop: "1px solid #1e1e2e", marginTop: "auto" } }, firebaseReady ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#6666aa", marginBottom: 8 } }, user ? `Login: ${user.email}` : "Belum login"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 10, marginBottom: 8, color: syncStatus === "online" ? "#4ade80" : syncStatus === "error" ? "#f87171" : "#fbbf24" } }, syncStatus === "online" ? "☁️ Tersimpan online" : syncStatus === "error" ? "⚠️ Gagal sinkronisasi" : "💾 Data lokal"), user ? /* @__PURE__ */ React.createElement("button", { className: "btn btn-ghost", style: { width: "100%" }, onClick: () => auth.signOut() }, "Logout") : /* @__PURE__ */ React.createElement("button", { className: "btn btn-primary", style: { width: "100%" }, onClick: async () => {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    await auth.signInWithPopup(provider);
-  } }, "Login dengan Gmail")) : /* @__PURE__ */ React.createElement("div", { style: { fontSize: 11, color: "#fbbf24", lineHeight: 1.5 } }, "Isi FIREBASE_CONFIG dulu untuk login Gmail & backup online.")), /* @__PURE__ */ React.createElement(
+  )), /* @__PURE__ */ React.createElement(
     "div",
     {
       className: `drawer-overlay${drawerOpen ? " open" : ""}`,
